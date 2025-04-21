@@ -1,0 +1,966 @@
+openapi: 3.0.0
+info:
+  title: Trusted Auto Data API
+  description: API for the Trusted Auto Data platform
+  version: 1.0.0
+servers:
+  - url: https://api.trustedautodata.com/v1
+    description: Production server
+  - url: https://staging-api.trustedautodata.com/v1
+    description: Staging server
+  - url: http://localhost:3001/v1
+    description: Local development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+
+    Car:
+      type: object
+      properties:
+        id:
+          type: string
+        make:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+        vin:
+          type: string
+        licensePlate:
+          type: string
+        owner:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            email:
+              type: string
+            phone:
+              type: string
+        status:
+          type: string
+          enum: [Connected, Not Connected, Offline, Pending]
+        mileage:
+          type: integer
+        lastUpdate:
+          type: string
+        telemetryData:
+          type: object
+          properties:
+            engineTemp:
+              type: string
+            batteryVoltage:
+              type: string
+            fuelLevel:
+              type: string
+            oilLife:
+              type: string
+            tirePressure:
+              type: object
+              properties:
+                frontLeft:
+                  type: string
+                frontRight:
+                  type: string
+                rearLeft:
+                  type: string
+                rearRight:
+                  type: string
+            dtcCodes:
+              type: array
+              items:
+                type: string
+        blockchainData:
+          type: object
+          properties:
+            transactions:
+              type: integer
+            lastTransaction:
+              type: string
+            address:
+              type: string
+        dealerAccess:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - make
+        - model
+        - year
+        - vin
+        - owner
+        - status
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        joined:
+          type: string
+        points:
+          type: integer
+        level:
+          type: integer
+        cars:
+          type: array
+          items:
+            type: string
+        certificates:
+          type: array
+          items:
+            type: string
+        rewards:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              status:
+                type: string
+                enum: [Active, Used, Expired]
+              redeemed:
+                type: string
+              expires:
+                type: string
+      required:
+        - id
+        - name
+        - email
+        - points
+        - level
+
+    Certificate:
+      type: object
+      properties:
+        id:
+          type: string
+        carId:
+          type: string
+        service:
+          type: string
+        date:
+          type: string
+        mileage:
+          type: integer
+        nextService:
+          type: integer
+        technician:
+          type: string
+        description:
+          type: string
+        parts:
+          type: array
+          items:
+            type: string
+        blockchainVerified:
+          type: boolean
+        blockchainTx:
+          type: string
+        dealerId:
+          type: string
+        dealerName:
+          type: string
+      required:
+        - id
+        - carId
+        - service
+        - date
+        - mileage
+        - technician
+        - blockchainVerified
+
+    Dealer:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [Service Center, Dealership, Repair Shop, Inspection Center]
+        address:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        accessLevel:
+          type: string
+          enum: [Full, Limited, ReadOnly]
+        cars:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - name
+        - type
+        - accessLevel
+
+    DashboardStats:
+      type: object
+      properties:
+        connectedCars:
+          type: integer
+        activeUsers:
+          type: integer
+        certificatesIssued:
+          type: integer
+        pendingServices:
+          type: integer
+      required:
+        - connectedCars
+        - activeUsers
+        - certificatesIssued
+        - pendingServices
+
+    ChartData:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+security:
+  - bearerAuth: []
+
+paths:
+  /cars:
+    get:
+      summary: Get all cars
+      description: Returns a list of all cars
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [Connected, Not Connected, Offline, Pending]
+        - name: dealerId
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of cars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Car'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create a new car
+      description: Creates a new car
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                make:
+                  type: string
+                model:
+                  type: string
+                year:
+                  type: integer
+                vin:
+                  type: string
+                licensePlate:
+                  type: string
+                ownerId:
+                  type: string
+              required:
+                - make
+                - model
+                - year
+                - vin
+                - ownerId
+      responses:
+        '201':
+          description: Car created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /cars/{id}:
+    get:
+      summary: Get a car by ID
+      description: Returns a car by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A car
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update a car
+      description: Updates a car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Car'
+      responses:
+        '200':
+          description: Car updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete a car
+      description: Deletes a car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Car deleted
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /cars/{id}/telemetry:
+    get:
+      summary: Get car telemetry data
+      description: Returns telemetry data for a car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Car telemetry data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartData'
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /cars/{id}/blockchain:
+    get:
+      summary: Get car blockchain data
+      description: Returns blockchain data for a car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Car blockchain data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        timestamp:
+                          type: string
+                        type:
+                          type: string
+                        signature:
+                          type: string
+                        status:
+                          type: string
+                  chart:
+                    $ref: '#/components/schemas/ChartData'
+        '404':
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users:
+    get:
+      summary: Get all users
+      description: Returns a list of all users
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create a new user
+      description: Creates a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                address:
+                  type: string
+              required:
+                - name
+                - email
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}:
+    get:
+      summary: Get a user by ID
+      description: Returns a user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/{id}/points:
+    get:
+      summary: Get user points history
+      description: Returns points history for a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User points history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartData'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /certificates:
+    get:
+      summary: Get all certificates
+      description: Returns a list of all certificates
+      parameters:
+        - name: carId
+          in: query
+          schema:
+            type: string
+        - name: dealerId
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of certificates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Certificate'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create a new certificate
+      description: Creates a new certificate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                carId:
+                  type: string
+                service:
+                  type: string
+                date:
+                  type: string
+                mileage:
+                  type: integer
+                nextService:
+                  type: integer
+                technician:
+                  type: string
+                description:
+                  type: string
+                parts:
+                  type: array
+                  items:
+                    type: string
+                dealerId:
+                  type: string
+              required:
+                - carId
+                - service
+                - date
+                - mileage
+                - technician
+                - dealerId
+      responses:
+        '201':
+          description: Certificate created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Certificate'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /certificates/{id}:
+    get:
+      summary: Get a certificate by ID
+      description: Returns a certificate by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A certificate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Certificate'
+        '404':
+          description: Certificate not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /dealers:
+    get:
+      summary: Get all dealers
+      description: Returns a list of all dealers
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of dealers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dealer'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /dealers/{id}:
+    get:
+      summary: Get a dealer by ID
+      description: Returns a dealer by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A dealer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dealer'
+        '404':
+          description: Dealer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /dashboard/stats:
+    get:
+      summary: Get dashboard statistics
+      description: Returns dashboard statistics
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStats'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /dashboard/charts/car-distribution:
+    get:
+      summary: Get car distribution chart data
+      description: Returns car distribution chart data
+      responses:
+        '200':
+          description: Car distribution chart data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartData'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /dashboard/charts/engine-health:
+    get:
+      summary: Get engine health distribution chart data
+      description: Returns engine health distribution chart data
+      responses:
+        '200':
+          description: Engine health distribution chart data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartData'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /dashboard/charts/car-growth:
+    get:
+      summary: Get car growth chart data
+      description: Returns car growth chart data
+      responses:
+        '200':
+          description: Car growth chart data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartData'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /dashboard/charts/user-points:
+    get:
+      summary: Get user points distribution chart data
+      description: Returns user points distribution chart data
+      responses:
+        '200':
+          description: User points distribution chart data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartData'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /dashboard/charts/user-activity:
+    get:
+      summary: Get user activity chart data
+      description: Returns user activity chart data
+      responses:
+        '200':
+          description: User activity chart data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartData'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /dashboard/charts/blockchain-transactions:
+    get:
+      summary: Get blockchain transactions chart data
+      description: Returns blockchain transactions chart data
+      responses:
+        '200':
+          description: Blockchain transactions chart data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartData'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /dashboard/charts/car-data-transmission:
+    get:
+      summary: Get car data transmission chart data
+      description: Returns car data transmission chart data
+      responses:
+        '200':
+          description: Car data transmission chart data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartData'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
