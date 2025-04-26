@@ -1,6 +1,16 @@
 import { atom } from "jotai"
 import { atomWithStorage } from "jotai/utils"
-import type { Car, Certificate, User, Dealer, DashboardStats, BlockchainTransaction, ChartData } from "@/lib/types"
+import type {
+  Car,
+  User,
+  Dealer,
+  DashboardStats,
+  BlockchainTransaction,
+  ChartData,
+  UserTableRow
+} from "@/lib/types"
+import {UserActivityChartItem, UserDetailed, UserPointsChartItem} from "@/lib/types/user-types";
+import {Certificate, CertificatesCard} from "@/lib/types/certificate-types";
 
 // Configuration atom
 export const useMockDataAtom = atomWithStorage("useMockData", false)
@@ -15,7 +25,10 @@ export const dashboardLoadingAtom = atom(false)
 // Data atoms
 export const carsAtom = atom<Car[]>([])
 export const usersAtom = atom<User[]>([])
+export const usersDetailedAtom = atom<UserDetailed[]>([])
+export const usersTableAtom = atom<UserTableRow[]>([])
 export const certificatesAtom = atom<Certificate[]>([])
+export const certificatesCardsAtom = atom<CertificatesCard[]>([])
 export const dealersAtom = atom<Dealer[]>([])
 export const dashboardStatsAtom = atom<DashboardStats | null>(null)
 
@@ -37,6 +50,28 @@ export const selectedUserAtom = atom((get) => {
   const selectedUserId = get(selectedUserIdAtom)
   return selectedUserId ? users.find((user) => user.id === selectedUserId) || null : null
 })
+
+export const selectedDetailedUserAtom = atom(
+    (get) => {
+      const users = get(usersDetailedAtom)
+      const selectedUserId = get(selectedUserIdAtom)
+      return selectedUserId ? users.find((user) => user.id === selectedUserId) || null : null
+    },
+    (get, set, newUser: UserDetailed | null) => {
+      if (newUser) {
+        set(usersDetailedAtom, (prev) => {
+          const index = prev.findIndex((u) => u.id === newUser.id)
+          if (index >= 0) {
+            return [...prev.slice(0, index), newUser, ...prev.slice(index + 1)]
+          }
+          return [...prev, newUser]
+        })
+        set(selectedUserIdAtom, newUser.id)
+      } else {
+        set(selectedUserIdAtom, null)
+      }
+    }
+)
 
 export const selectedCertificateAtom = atom((get) => {
   const certificates = get(certificatesAtom)
@@ -67,8 +102,7 @@ export const filteredCarsAtom = atom((get) => {
     (car) =>
       car.make.toLowerCase().includes(filter) ||
       car.model.toLowerCase().includes(filter) ||
-      car.vin.toLowerCase().includes(filter) ||
-      car.owner.name.toLowerCase().includes(filter),
+      car.vin.toLowerCase().includes(filter),
   )
 })
 
@@ -88,7 +122,7 @@ export const filteredCertificatesAtom = atom((get) => {
   if (!filter) return certificates
 
   return certificates.filter(
-    (cert) => cert.id.toLowerCase().includes(filter) || cert.service.toLowerCase().includes(filter),
+    (cert) => cert.id.toLowerCase().includes(filter) || cert.serviceType.toLowerCase().includes(filter),
   )
 })
 
@@ -136,10 +170,13 @@ export const dealersPaginationAtom = atom({
 export const carDistributionChartAtom = atom<ChartData | null>(null)
 export const engineHealthChartAtom = atom<ChartData | null>(null)
 export const carGrowthChartAtom = atom<ChartData | null>(null)
-export const userPointsChartAtom = atom<ChartData | null>(null)
-export const userActivityChartAtom = atom<ChartData | null>(null)
+export const userPointsChartAtom = atom<UserPointsChartItem[] | null>(null)
+export const userActivityChartAtom = atom<UserActivityChartItem[] | null>(null)
+export const userPointsHistoryChartAtom = atom<ChartData | null>(null)
+export const userCarActivityChartAtom = atom<ChartData | null>(null)
 export const blockchainTransactionsChartAtom = atom<ChartData | null>(null)
 export const carDataTransmissionChartAtom = atom<ChartData | null>(null)
+export const maintenanceCertificatesAtom = atom<CertificatesCard[] | null>(null)
 
 // Blockchain transactions atom
 export const blockchainTransactionsAtom = atom<BlockchainTransaction[]>([])

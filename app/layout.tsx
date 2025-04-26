@@ -9,7 +9,6 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Trusted Auto Data",
   description: "Verified car data for maintenance, insurance, and resale",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -20,7 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+      >
           {children}
         </ThemeProvider>
       </body>

@@ -2,8 +2,6 @@ import type {
   ApiResponse,
   ApiError,
   Car,
-  Certificate,
-  User,
   Dealer,
   DashboardStats,
   BlockchainTransaction,
@@ -25,12 +23,14 @@ import {
   mockUserActivityChart,
   mockUserPointsHistoryChart,
 } from "./mock-data"
+import {User} from "@/lib/types/user-types";
+import {Certificate} from "@/lib/types/certificate-types";
 
 // Helper function to simulate API delay
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // Helper function to handle API responses with mock data
-async function handleMockResponse<T>(data: T): Promise<ApiResponse<T>> {
+export async function handleMockResponse<T>(data: T): Promise<ApiResponse<T>> {
   // Simulate network delay
   await delay(300)
 
@@ -64,9 +64,7 @@ export async function getCars(params?: {
     filteredCars = filteredCars.filter(
       (car) =>
         car.make.toLowerCase().includes(search) ||
-        car.model.toLowerCase().includes(search) ||
-        car.vin.toLowerCase().includes(search) ||
-        car.owner.name.toLowerCase().includes(search),
+        car.model.toLowerCase().includes(search),
     )
   }
 
@@ -166,52 +164,6 @@ export async function getCarBlockchainData(
   })
 }
 
-// Users API
-export async function getUsers(params?: {
-  search?: string
-  page?: number
-  pageSize?: number
-}): Promise<ApiResponse<PaginatedResponse<User>>> {
-  let filteredUsers = [...mockUsers]
-
-  // Apply search filter
-  if (params?.search) {
-    const search = params.search.toLowerCase()
-    filteredUsers = filteredUsers.filter(
-      (user) => user.name.toLowerCase().includes(search) || user.email.toLowerCase().includes(search),
-    )
-  }
-
-  // Pagination
-  const page = params?.page || 1
-  const pageSize = params?.pageSize || 10
-  const total = filteredUsers.length
-  const totalPages = Math.ceil(total / pageSize)
-  const paginatedUsers = filteredUsers.slice((page - 1) * pageSize, page * pageSize)
-
-  return handleMockResponse<PaginatedResponse<User>>({
-    data: paginatedUsers,
-    total,
-    page,
-    pageSize,
-    totalPages,
-  })
-}
-
-export async function getUser(id: string): Promise<ApiResponse<User>> {
-  const user = mockUsers.find((user) => user.id === id)
-
-  if (!user) {
-    throw {
-      code: "NOT_FOUND",
-      message: `User with ID ${id} not found`,
-      status: 404,
-    } as ApiError
-  }
-
-  return handleMockResponse<User>(user)
-}
-
 export async function createUser(user: Omit<User, "id">): Promise<ApiResponse<User>> {
   const newUser = {
     ...user,
@@ -267,7 +219,8 @@ export async function getCertificates(params?: {
   search?: string
   page?: number
   pageSize?: number
-}): Promise<ApiResponse<PaginatedResponse<Certificate>>> {
+}): Promise<ApiResponse<PaginatedResponse<Certificate>>>
+{
   let filteredCertificates = [...mockCertificates]
 
   // Apply filters
@@ -368,7 +321,8 @@ export async function getDealers(params?: {
   search?: string
   page?: number
   pageSize?: number
-}): Promise<ApiResponse<PaginatedResponse<Dealer>>> {
+}): Promise<ApiResponse<PaginatedResponse<Dealer>>>
+{
   let filteredDealers = [...mockDealers]
 
   // Apply search filter

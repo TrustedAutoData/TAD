@@ -1,80 +1,34 @@
+"use client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { AlertCircle, Car, FileText, Search, Users, Wrench } from "lucide-react"
-import Link from "next/link"
-import { ConnectedCarsChart } from "@/components/connected-cars-chart"
-import { MaintenanceCertificates } from "@/components/maintenance-certificates"
-import { CarMakeChart } from "@/components/car-make-chart"
-import { EngineHealthDistributionChart } from "@/components/engine-health-distribution-chart"
+import {Search} from "lucide-react"
+import DashboardCards from "@/components/dashboard/dashboard-cards";
+import {CarMakeChart} from "@/components/dashboard/car-make-chart";
+import {EngineHealthDistributionChart} from "@/components/dashboard/engine-health-distribution-chart";
+import {ConnectedCarsChart} from "@/components/dashboard/connected-cars-chart";
+import {useEffect} from "react";
+import {useDashboard} from "@/lib/hooks/stats-hooks";
+import {MaintenanceCertificates} from "@/components/dashboard/maintenance-certificates";
+import CarSearch from "@/components/dashboard/car-search";
 
 export default function AdminDashboard() {
+  const {fetchDashboard, carDistributionChart, engineHealthChart, carGrowthChart, loading} = useDashboard();
+
+  useEffect(() => {
+    fetchDashboard()
+  }, [])
+
+  if (loading || !carDistributionChart || !engineHealthChart|| !carGrowthChart)
+    return <div>Loading...</div>
+
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <>
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <div className="flex items-center gap-2">
-          <Button variant="outline">
-            <Search className="mr-2 h-4 w-4" /> Find Car
-          </Button>
-          <Button asChild>
-            <Link href="/dashboard/admin/certificates/new">
-              <FileText className="mr-2 h-4 w-4" /> New Certificate
-            </Link>
-          </Button>
-        </div>
+        <CarSearch/>
       </div>
 
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Service Alert</AlertTitle>
-        <AlertDescription>
-          5 cars are due for maintenance in the next 7 days. Check the maintenance schedule.
-        </AlertDescription>
-      </Alert>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Connected Cars</CardTitle>
-            <Car className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">128</div>
-            <p className="text-xs text-muted-foreground">+12 from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">96</div>
-            <p className="text-xs text-muted-foreground">+8 from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Certificates Issued</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">342</div>
-            <p className="text-xs text-muted-foreground">+28 from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pending Services</CardTitle>
-            <Wrench className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">15</div>
-            <p className="text-xs text-muted-foreground">5 due in the next week</p>
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardCards/>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="col-span-1">
@@ -83,7 +37,7 @@ export default function AdminDashboard() {
             <CardDescription>Breakdown of connected cars by manufacturer</CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <CarMakeChart />
+            <CarMakeChart data={carDistributionChart.data}/>
           </CardContent>
         </Card>
 
@@ -93,7 +47,7 @@ export default function AdminDashboard() {
             <CardDescription>Overall health status of connected vehicles</CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <EngineHealthDistributionChart />
+            <EngineHealthDistributionChart data={engineHealthChart.data}/>
           </CardContent>
         </Card>
       </div>
@@ -105,7 +59,7 @@ export default function AdminDashboard() {
             <CardDescription>Monthly growth over the past year</CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <ConnectedCarsChart />
+            <ConnectedCarsChart data={carGrowthChart.data}/>
           </CardContent>
         </Card>
 
@@ -119,6 +73,6 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </>
   )
 }
