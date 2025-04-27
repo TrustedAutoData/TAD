@@ -42,32 +42,47 @@ const barData = [
   { name: "Dec", value: 130 },
 ]
 
-export function LineChart() {
+type LineChartProps = {
+  data: any[];
+  lines: {
+    dataKey: string;
+    color: string;
+  }[];
+};
+
+export function LineChart({ data, lines }: LineChartProps) {
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <RechartsLineChart data={lineData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="date" />
-        <YAxis />
-        <Tooltip />
-        <Line type="monotone" dataKey="users" stroke="#3b82f6" strokeWidth={2} />
-        <Line type="monotone" dataKey="cars" stroke="#10b981" strokeWidth={2} />
-        <Line type="monotone" dataKey="certificates" stroke="#f59e0b" strokeWidth={2} />
-      </RechartsLineChart>
-    </ResponsiveContainer>
-  )
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsLineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
+          <YAxis />
+          <Tooltip />
+          {lines.map((line) => (
+              <Line
+                  key={line.dataKey}
+                  type="monotone"
+                  dataKey={line.dataKey}
+                  stroke={line.color}
+                  strokeWidth={2}
+                  dot={false}
+              />
+          ))}
+        </RechartsLineChart>
+      </ResponsiveContainer>
+  );
 }
 
-export function BarChart() {
+export function BarChart({ data }: { data: any[] }) {
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <RechartsBarChart data={barData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" />
-        <YAxis />
-        <Tooltip />
-        <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-      </RechartsBarChart>
-    </ResponsiveContainer>
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsBarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+        </RechartsBarChart>
+      </ResponsiveContainer>
   )
 }

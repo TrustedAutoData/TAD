@@ -178,6 +178,8 @@ export const blockchainTransactionsChartAtom = atom<ChartData | null>(null)
 export const carDataTransmissionChartAtom = atom<ChartData | null>(null)
 export const maintenanceCertificatesAtom = atom<CertificatesCard[] | null>(null)
 
+export const periodAtom = atom<"7d" | "30d" | "90d" | "1y" | "all">("30d")
+
 // Blockchain transactions atom
 export const blockchainTransactionsAtom = atom<BlockchainTransaction[]>([])
 

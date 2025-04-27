@@ -12,7 +12,7 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar/>
       <main>
           <div className="m-2">
               <SidebarTrigger/>

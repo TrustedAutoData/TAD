@@ -235,7 +235,7 @@ export async function getCertificates(params?: {
   if (params?.search) {
     const search = params.search.toLowerCase()
     filteredCertificates = filteredCertificates.filter(
-      (cert) => cert.id.toLowerCase().includes(search) || cert.service.toLowerCase().includes(search),
+      (cert) => cert.id.toLowerCase().includes(search) || cert.serviceType.toLowerCase().includes(search),
     )
   }
 
