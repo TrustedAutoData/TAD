@@ -15,7 +15,7 @@ import {Button} from "@/components/ui/button";
 import {usePathname, useRouter} from "next/navigation";
 import {logout} from "@/actions/auth";
 
-const AppSidebar = () => {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const pathname = usePathname()
     const router = useRouter()
 
@@ -31,7 +31,7 @@ const AppSidebar = () => {
         router.push("/auth")
     }
     return (
-        <Sidebar>
+        <Sidebar collapsible="offcanvas" {...props}>
             <SidebarHeader className="border-b">
                 <div className="flex items-center gap-2 px-2">
                     <Shield className="h-6 w-6 text-primary" />

@@ -94,7 +94,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <>
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Users & Points</h1>
         <Button variant="outline" onClick={handleExportAll}>
@@ -245,6 +245,6 @@ export default function AdminUsersPage() {
         </CardFooter>
 
       </Card>
-    </div>
+    </>
   )
 }

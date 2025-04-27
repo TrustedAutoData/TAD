@@ -132,7 +132,7 @@ export default function AdminCarsPage() {
   ]
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <>
       <PageHeader
         title="Connected Cars"
         actions={
@@ -210,6 +210,6 @@ export default function AdminCarsPage() {
           />
         </CardContent>
       </Card>
-    </div>
+    </>
   )
 }

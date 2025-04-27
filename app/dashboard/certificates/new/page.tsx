@@ -10,10 +10,10 @@ import Link from "next/link"
 
 export default function NewCertificatePage() {
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <>
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/dashboard/admin/certificates">
+          <Link href="/dashboard/certificates">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
@@ -152,6 +152,6 @@ export default function NewCertificatePage() {
           </CardFooter>
         </Card>
       </div>
-    </div>
+    </>
   )
 }

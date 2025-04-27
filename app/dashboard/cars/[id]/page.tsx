@@ -106,7 +106,7 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
   ]
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <>
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/dashboard/admin/cars">
@@ -493,6 +493,6 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </>
   )
 }
