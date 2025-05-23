@@ -150,16 +150,16 @@ export const mockDealers: Dealer[] = [
 export const mockCars: Car[] = [
   {
     id: "1",
-    make: "Toyota",
-    model: "Camry",
-    year: 2020,
-    vin: "1HGCM82633A123456",
-    licensePlate: "ABC-1234",
+    make: "Mitsubishi",
+    model: "Pajero",
+    year: 2007,
+    vin: "JMBLYV98W7J005199",
+    licensePlate: "KA-1111-KA",
     owner: mockUsers[0].id,
     dealerAccess: [mockDealers[0].id, mockDealers[2].id],
     status: "Connected",
     mileage: 45000,
-    lastUpdate: "2025-04-25T12:30:00Z",
+    lastUpdate: "2025-05-23T12:30:00Z",
     telemetryData: {
       engineTemp: "90°C",
       batteryVoltage: "12.6V",

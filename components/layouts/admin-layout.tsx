@@ -34,7 +34,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const adminMenuItems = [
     { title: "Admin Dashboard", icon: Home, href: "/dashboard" },
-    { title: "Connected Cars", icon: Car, href: "/dashboard/admin/cars" },
+    { title: "Connected Cars", icon: Car, href: "/dashboard/cars" },
     { title: "Maintenance Certs", icon: FileText, href: "/dashboard/admin/certificates" },
     { title: "Users & Points", icon: Users, href: "/dashboard/admin/users" },
     { title: "Analytics", icon: BarChart3, href: "/dashboard/admin/analytics" },

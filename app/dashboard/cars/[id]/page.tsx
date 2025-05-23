@@ -1,3 +1,4 @@
+'use client'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,24 +21,39 @@ import { CarHealthChart } from "@/components/car-health-chart"
 import { CarBlockchainTransactionsChart } from "@/components/car-blockchain-transactions-chart"
 import { CarOBDDataChart } from "@/components/car-obd-data-chart"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useCars } from "@/lib/hooks/car-hooks"
+import { useToast } from "@/hooks/use-toast"
+import { use, useEffect, useState } from "react"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 
-export default function CarDetailsPage({ params }: { params: { id: string } }) {
+export default function CarDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { getCarData, registerCarKm, cars } = useCars()
+  const { toast } = useToast()
+  const [carDataOnChain, setCarDataOnChain] = useState<any>(null)
+  const [car, setCar] = useState<any>(null)
+  const [isKmDialogOpen, setIsKmDialogOpen] = useState(false)
+  const [kmInput, setKmInput] = useState("")
+  // Unwrap params using React.use
+  const { id: carId } = use(params)
+  //const car = cars.find((c) => c.id === carId)
+  console.log("car = ", car);
+
   // In a real app, you would fetch car data based on the ID
-  const carId = params.id
   const carData = {
     id: carId,
-    make: "Toyota",
-    model: "Camry",
-    year: 2022,
-    vin: "1HGCM82633A123456",
+    make: "Mitsubishi",
+    model: "Pajero",
+    year: 2007,
+    vin: "JMBLYV98W7J005199",
     licensePlate: "ABC-1234",
     owner: {
-      name: "John Doe",
-      email: "john.doe@example.com",
+      name: "Petro Yaremenko",
+      email: "Petro.Yaremenko@gmail.com",
       phone: "+1 (555) 123-4567",
     },
     status: "Connected",
-    mileage: 78432,
+    mileage: 0,
     lastUpdate: "Today, 9:30 AM",
     blockchainData: {
       transactions: 42,
@@ -105,11 +121,133 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
     },
   ]
 
+  useEffect(() => {
+    async function fetchData() {
+      let currentCar = cars.find((c) => c.id === carId)
+      
+      if (!currentCar) {
+        try {
+          //await fetchCar(carId)
+          currentCar = cars.find((c) => c.id === carId)
+          if (!currentCar) {
+            throw new Error('Car not found after fetch')
+          }
+        } catch (error) {
+          console.error('Error fetching car:', error)
+          toast({
+            title: 'Error fetching car data',
+            description: 'Failed to load car details.',
+            variant: 'destructive',
+          })
+          setCarDataOnChain(carData)
+          return
+        }
+      }
+
+      console.log('car = ', currentCar)
+      setCar(currentCar)
+
+      if (currentCar?.vin) {
+        console.log('car vin = ', currentCar.vin)
+        getCarData({
+          vin: currentCar.vin,
+          options: {
+            onSuccess: (data) => {
+              setCarDataOnChain(data)
+              toast({
+                title: 'Car data fetched',
+                description: `Total KM: ${data.totalKm}`,
+              })
+            },
+            onError: (error) => {
+              toast({
+                title: 'Error fetching car data',
+                description: error.message,
+                variant: 'destructive',
+              })
+              setCarDataOnChain(carData)
+            },
+          },
+        })
+      } else {
+        setCarDataOnChain(carData)
+      }
+    }
+
+    fetchData()
+  }, [carId, getCarData]) // Removed cars from dependencies
+
+  const handleRegisterKm = async () => {
+    if (!car?.vin || !kmInput) {
+      toast({
+        title: "Invalid input",
+        description: "Please enter a valid kilometer value",
+        variant: "destructive",
+      })
+      return
+    }
+    const km = parseInt(kmInput, 10)
+    if (isNaN(km) || km <= 0) {
+      toast({
+        title: "Invalid input",
+        description: "Kilometer value must be a positive number",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      await registerCarKm({
+        vin: car.vin,
+        km,
+        options: {
+          onSuccess: () => {
+            toast({
+              title: "Kilometers registered",
+              description: `Successfully registered ${km} km`,
+            })
+            // Refresh car data
+            getCarData({
+              vin: car.vin,
+              options: {
+                onSuccess: (data) => {
+                  setCarDataOnChain(data)
+                  toast({
+                    title: "Car data updated",
+                    description: `Total KM: ${data.totalKm}`,
+                  })
+                },
+                onError: (error) => {
+                  toast({
+                    title: "Error fetching car data",
+                    description: error.message,
+                    variant: "destructive",
+                  })
+                },
+              },
+            })
+          },
+          onError: (error) => {
+            toast({
+              title: "Error registering kilometers",
+              description: error.message,
+              variant: "destructive",
+            })
+          },
+        },
+      })
+      setIsKmDialogOpen(false)
+      setKmInput("")
+    } catch (error) {
+      console.error("Error registering kilometers:", error)
+    }
+  }
+
   return (
     <>
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/dashboard/admin/cars">
+          <Link href="/dashboard/cars">
             <ChevronLeft className="h-4 w-4" />
           </Link>
         </Button>
@@ -155,8 +293,8 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
                 <span className="text-sm">{carData.licensePlate}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Mileage:</span>
-                <span className="text-sm">{carData.mileage} km</span>
+                <span className="text-sm font-medium">Total KM:</span>
+                <span className="text-sm">{carDataOnChain?.totalKm} km</span>
               </div>
             </div>
 
@@ -184,6 +322,9 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
           <CardFooter>
             <Button variant="outline" className="w-full">
               <Car className="mr-2 h-4 w-4" /> Edit Car Details
+            </Button>
+            <Button className="w-full" onClick={() => setIsKmDialogOpen(true)}>
+              <Car className="mr-2 h-4 w-4" /> Register KM
             </Button>
           </CardFooter>
         </Card>
@@ -454,7 +595,7 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
                       <Download className="mr-1 h-3 w-3" /> Certificate
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href="https://explorer.solana.com" target="_blank">
+                      <Link href="https://solscan.io/token/4n983HaQse8aAC2AX2rv1W4ZJdy5S3vHor4TSi7Rshtx?cluster=devnet" target="_blank">
                         <ExternalLink className="mr-1 h-3 w-3" /> Blockchain
                       </Link>
                     </Button>
@@ -477,7 +618,7 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
                       <Download className="mr-1 h-3 w-3" /> Certificate
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link href="https://explorer.solana.com" target="_blank">
+                      <Link href="https://solscan.io/token/AcczFWk6BdMcVkj83QsfaAP2YtFUESxAHCKp5H1YvQYK?cluster=devnet" target="_blank">
                         <ExternalLink className="mr-1 h-3 w-3" /> Blockchain
                       </Link>
                     </Button>
@@ -493,6 +634,38 @@ export default function CarDetailsPage({ params }: { params: { id: string } }) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={isKmDialogOpen} onOpenChange={setIsKmDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Register Kilometers</DialogTitle>
+            <DialogDescription>
+              Enter the current kilometer reading for {car?.make} {car?.model} (VIN: {car?.vin}).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="km" className="text-right">
+                Kilometers
+              </label>
+              <Input
+                id="km"
+                type="number"
+                value={kmInput}
+                onChange={(e) => setKmInput(e.target.value)}
+                className="col-span-3"
+                placeholder="Enter kilometers"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsKmDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleRegisterKm}>Register</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

@@ -17,6 +17,7 @@ export interface Car {
   dealerAccess: string[];
   status: Status;
   mileage: number;
+  totalKm?: number;
   lastUpdate: string;
   telemetryData: TelemetryData;
   blockchainData: BlockchainData;

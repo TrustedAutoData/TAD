@@ -49,6 +49,7 @@ export async function getCars(params?: {
   pageSize?: number
 }): Promise<ApiResponse<PaginatedResponse<Car>>> {
   let filteredCars = [...mockCars]
+  console.log("filteredCars =", filteredCars);
 
   // Apply filters
   if (params?.status) {
@@ -74,6 +75,8 @@ export async function getCars(params?: {
   const total = filteredCars.length
   const totalPages = Math.ceil(total / pageSize)
   const paginatedCars = filteredCars.slice((page - 1) * pageSize, page * pageSize)
+
+  console.log("paginatedCars =", paginatedCars);
 
   return handleMockResponse<PaginatedResponse<Car>>({
     data: paginatedCars,

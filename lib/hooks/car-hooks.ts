@@ -3,6 +3,7 @@ import {useAtom} from "jotai/index";
 import {carsAtom, carsLoadingAtom, carsPaginationAtom, selectedCarAtom, selectedCarIdAtom} from "@/lib/store";
 import {useCallback} from "react";
 import * as api from "@/lib/api/api-client";
+import { getCarDataAtom, registerCarKmAtom } from "../store/car-actions";
 
 export function useCars() {
     const [cars, setCars] = useAtom(carsAtom)
@@ -10,30 +11,45 @@ export function useCars() {
     const [selectedCarId, setSelectedCarId] = useAtom(selectedCarIdAtom)
     const [selectedCar] = useAtom(selectedCarAtom)
     const [pagination, setPagination] = useAtom(carsPaginationAtom)
+    const [, registerCarKm] = useAtom(registerCarKmAtom)
+    const [, getCarData] = useAtom(getCarDataAtom)
 
     const fetchCars = useCallback(
-        async (params?: { status?: string; dealerId?: string; search?: string }) => {
-            setLoading(true)
-            try {
-                const response = await api.getCars({
-                    ...params,
-                    page: pagination.page,
-                    pageSize: pagination.pageSize,
-                })
-                setCars(response.data.data)
-                setPagination({
-                    ...pagination,
-                    total: response.data.total,
-                    totalPages: response.data.totalPages,
-                })
-            } catch (error) {
-                console.error("Error fetching cars:", error)
-            } finally {
-                setLoading(false)
-            }
+        async (params?: { status?: string; dealerId?: string; search?: string; page?: number }) => {
+          setLoading(true)
+          try {
+            const response = await api.getCars({
+              ...params,
+              page: params?.page ?? pagination.page,
+              pageSize: pagination.pageSize,
+            })
+            setCars(response.data.data)
+            // Only update pagination if necessary to avoid triggering re-renders
+            setPagination((prev) => {
+              const newPagination = {
+                ...prev,
+                total: response.data.total,
+                totalPages: response.data.totalPages,
+                page: response.data.page,
+              }
+              // Avoid unnecessary updates
+              if (
+                prev.total === newPagination.total &&
+                prev.totalPages === newPagination.totalPages &&
+                prev.page === newPagination.page
+              ) {
+                return prev
+              }
+              return newPagination
+            })
+          } catch (error) {
+            console.error("Error fetching cars:", error)
+          } finally {
+            setLoading(false)
+          }
         },
-        [setCars, setLoading, pagination, setPagination],
-    )
+        [setCars, setLoading, pagination.page, pagination.pageSize, setPagination]
+      )
 
     const fetchCar = useCallback(
         async (id: string) => {
@@ -137,5 +153,7 @@ export function useCars() {
         updateCar,
         deleteCar,
         changePage,
+        registerCarKm,
+        getCarData,
     }
 }

@@ -123,7 +123,7 @@ export default function AdminCarsPage() {
       cell: (car: any) => (
         <div className="flex items-center justify-end gap-2">
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/dashboard/admin/cars/${car.id}`}>View</Link>
+            <Link href={`/dashboard/cars/${car.id}`}>View</Link>
           </Button>
           <BlockchainLink address={car.blockchainData.address} disabled={car.blockchainData.transactions === 0} />
         </div>

@@ -7,11 +7,11 @@ export interface User {
     id: string;
     name: string;
     email: string;
-    phone: string;
+    phone?: string;
     address?: string;
-    joined: string;
-    points: number;
-    level: number;
+    joined?: string;
+    points?: number;
+    level?: number;
 }
 
 export interface UserDetailed extends User{
